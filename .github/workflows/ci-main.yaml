@@ -31,7 +31,10 @@ jobs:
     strategy:
       matrix:
         profile: ["local-code"]
-      fail-fast: true  
+      fail-fast: true
+    steps:
+      - name: Placeholder Step
+        run: echo "Running deployment tests..."
   deploy:
     runs-on: ubuntu-latest
     steps:
@@ -45,4 +48,3 @@ jobs:
         run: |     
           export KUBECONFIG=skaffold.yaml
           kubectl apply  -f release/kubernetes-manifests.yaml
-          
