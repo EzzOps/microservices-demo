@@ -52,6 +52,7 @@ jobs:
       - name: Wait For Pods
         timeout-minutes: 20
         run: |
+          export KUBECONFIG=skaffold.yaml
           set -x
           kubectl wait --for=condition=available --timeout=1000s deployment/redis-cart
           kubectl wait --for=condition=available --timeout=1000s deployment/adservice
@@ -68,6 +69,7 @@ jobs:
       - name: Smoke Test
         timeout-minutes: 5
         run: |
+          export KUBECONFIG=skaffold.yaml
           set -x
           # start fresh loadgenerator pod
           kubectl delete pod -l app=loadgenerator
