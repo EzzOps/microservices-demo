@@ -5,10 +5,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'latest'
       - name: Deploy Kubernetes Manifests
         timeout-minutes: 10
         run: |
-          sudo mkdir -p /kubeconf
-          echo "$DEV_CLUSTER_KUBECONF" > /kubeconf/kubeconf.conf        
-          export KUBECONFIG=/kubeconf/kubeconf.conf 
+          mkdir -p /kubeconf
+          echo "$DEV_CLUSTER_KUBECONF" > kubeconf/kubeconf.conf        
+          export KUBECONFIG=kubeconf/kubeconf.conf 
           kubectl apply -f kubernetes-manifests/
