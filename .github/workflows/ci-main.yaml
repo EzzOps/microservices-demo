@@ -12,5 +12,5 @@ jobs:
         timeout-minutes: 10
         run: |     
           export KUBECONFIG=skaffold.yaml
-          kubectl apply  -f release/kubernetes-manifests/
+          kubectl apply  -f release/kubernetes-manifests.yaml
           
