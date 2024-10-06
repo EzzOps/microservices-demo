@@ -16,4 +16,4 @@ jobs:
           mkdir -p kubeconf
           echo "$DEV_CLUSTER_KUBECONF" > kubeconf/kubeconf.conf        
           export KUBECONFIG=kubeconf/kubeconf.conf 
-          kubectl apply -f kubernetes-manifests/
+          kubectl apply --validate=false -f kubernetes-manifests/
