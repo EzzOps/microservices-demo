@@ -1,116 +1,19 @@
-# Copyright 2021 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-apiVersion: skaffold/v3
+apiVersion: v1
+clusters:
+- cluster:
+    insecure-skip-tls-verify: true
+    server: https://7.tcp.eu.ngrok.io:10129
+  name: kind-ezzops
+contexts:
+- context:
+    cluster: kind-ezzops
+    user: kind-ezzops
+  name: kind-ezzops
+current-context: kind-ezzops
 kind: Config
-metadata:
-  name: app
-build:
-  artifacts:
-  # image tags are relative; to specify an image repo (e.g. GCR), you
-  # must provide a "default repo" using one of the methods described
-  # here:
-  # https://skaffold.dev/docs/concepts/#image-repository-handling
-  - image: emailservice
-    context: src/emailservice
-  - image: productcatalogservice
-    context: src/productcatalogservice
-  - image: recommendationservice
-    context: src/recommendationservice
-  - image: shoppingassistantservice
-    context: src/shoppingassistantservice
-  - image: shippingservice
-    context: src/shippingservice
-  - image: checkoutservice
-    context: src/checkoutservice
-  - image: paymentservice
-    context: src/paymentservice
-  - image: currencyservice
-    context: src/currencyservice
-  - image: cartservice
-    context: src/cartservice/src
-    docker:
-      dockerfile: Dockerfile
-  - image: frontend
-    context: src/frontend
-  - image: adservice
-    context: src/adservice
-  tagPolicy:
-    gitCommit: {}
-  local:
-    useBuildkit: false
-manifests:
-  kustomize:
-    paths:
-    - kubernetes-manifests
-deploy:
-  kubectl: {}
-# "gcb" profile allows building and pushing the images
-# on Google Container Builder without requiring docker
-# installed on the developer machine. However, note that
-# since GCB does not cache the builds, each build will
-# start from scratch and therefore take a long time.
-#
-# This is not used by default. To use it, run:
-#     skaffold run -p gcb
-profiles:
-- name: gcb
-  build:
-    googleCloudBuild:
-      diskSizeGb: 300
-      machineType: N1_HIGHCPU_32
-      timeout: 4000s
-# "debug" profile replaces the default Dockerfile in cartservice with Dockerfile.debug,
-# which enables debugging via skaffold.
-#
-# This profile is used by default when running skaffold debug.
-- name: debug
-  activation:
-  - command: debug
-  patches:
-  - op: replace
-    path: /build/artifacts/7/docker/dockerfile
-    value: Dockerfile.debug
-# The "network-policies" profile is not used by default.
-# You can use it in isolation or in combination with other profiles:
-#     skaffold run -p network-policies, debug
-- name: network-policies
-  patches:
-  - op: add
-    path: /manifests/kustomize/paths/1
-    value: kustomize/components/network-policies
----
-apiVersion: skaffold/v3
-kind: Config
-metadata:
-  name: loadgenerator
-requires:
-- configs:
-  - app
-build:
-  artifacts:
-  - image: loadgenerator
-    context: src/loadgenerator
-manifests:
-  rawYaml:
-  - ./kubernetes-manifests/loadgenerator.yaml
-deploy:
-  kubectl: {}
-profiles:
-- name: gcb
-  build:
-    googleCloudBuild:
-      diskSizeGb: 300
-      machineType: N1_HIGHCPU_32
-      timeout: 4000s
+preferences: {}
+users:
+- name: kind-ezzops
+  user:
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURLVENDQWhHZ0F3SUJBZ0lJWU5WcFRhQ0t3V2t3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TkRFd01EWXhPRE13TXpsYUZ3MHlOVEV3TURZeE9ETTFNemxhTUR3eApIekFkQmdOVkJBb1RGbXQxWW1WaFpHMDZZMngxYzNSbGNpMWhaRzFwYm5NeEdUQVhCZ05WQkFNVEVHdDFZbVZ5CmJtVjBaWE10WVdSdGFXNHdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDaEptRFYKajYrRTc1eU5JSWtHT0ZpWStMNWhhUzRCcXdjVkhkNzhlMXV5UWhtaUVRRzl1NmRlNXluc2d4dk5qSVgxN2lsdQp6UWlsSzRwcUh1WHFzeEp2aFNrT280aVVwRTF2Rk5rbDNpdFNjbmx0dE9WNTMydmg0VGNCVUQzeitjaXByc1NFCkpwVzgyN2RvQUpZejUxeWkzT1FHUDRpczBFY29KRWNxenU1bTJlcTFvWXhENjdXNko1czNqQ29KMUs5YW1GNUoKeTFFK0ZIMkZTOC8wZlVnMDFwZHpKZEJJdkpFanlyV0FNWnBMYXd5cE9PamVWMGxZVVcvZFRjS0lKbWhNTzcvcQpGckR4bUt3NllmQk9MVG41bWY4cnBpajJVVTNUSUZLTzlrMlBvUkZkaWtFVm50YWJsRTJYR2w2TERmME45djZzCmVWNnBTL2ttSFFnVFBmb3hBZ01CQUFHalZqQlVNQTRHQTFVZER3RUIvd1FFQXdJRm9EQVRCZ05WSFNVRUREQUsKQmdnckJnRUZCUWNEQWpBTUJnTlZIUk1CQWY4RUFqQUFNQjhHQTFVZEl3UVlNQmFBRkNzbzlseEhsTjRPQ2JHMAp6WGhqWXhQQ0VZdzFNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUFORHdPKzRwZEZtT1BJMmsvSFFkaXEwVzllCnI2RWYrTTUyaU9XOE1CWTQrYmlZeWJNSmxKQUxsUnMwMnRhV2JSWkN1VEdsMUJsVi9VS3FhTm02WVcxUHJ0VjUKcmM1bWkvMjJUTFdYM1RxSnZGUDdGdXJvQi81aGUwSkNBUThlMm1TS0ZyR2cvYmlheGxUWTI4NHNLVzFWdU9YUwpHOGVNY2ljZEkxWGJJd3J1OVZoSEFjdW95cm02Y0hUVVRVSklFVE95cVNwVElLUXRpYVlua3RFL0hhSFZKOEJuCmdJdlZYdU9rU1Z6MUluSVpqL2RMbFgveWQySjRLWEhoWm0raElkSVd3QjN3cE9KODM3UzdOMVhzWG5GVzZqbHMKRlRiaXFYZE14TEE2Zk1TN2dXSFkwa2JhVGtiRzB1WWcwTFZtcERuczVEOGh4L0JNcWZuL2o3S2Q5U05qCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBb1NaZzFZK3ZoTytjalNDSkJqaFltUGkrWVdrdUFhc0hGUjNlL0h0YnNrSVpvaEVCCnZidW5YdWNwN0lNYnpZeUY5ZTRwYnMwSXBTdUthaDdsNnJNU2I0VXBEcU9JbEtSTmJ4VFpKZDRyVW5KNWJiVGwKZWQ5cjRlRTNBVkE5OC9uSXFhN0VoQ2FWdk51M2FBQ1dNK2Rjb3R6a0JqK0lyTkJIS0NSSEtzN3VadG5xdGFHTQpRK3UxdWllYk40d3FDZFN2V3BoZVNjdFJQaFI5aFV2UDlIMUlOTmFYY3lYUVNMeVJJOHExZ0RHYVMyc01xVGpvCjNsZEpXRkZ2M1UzQ2lDWm9URHUvNmhhdzhaaXNPbUh3VGkwNStabi9LNllvOWxGTjB5QlNqdlpOajZFUlhZcEIKRlo3V201Uk5seHBlaXczOURmYitySGxlcVV2NUpoMElFejM2TVFJREFRQUJBb0lCQVFDSmo4RkpqSVkvN0dxdQo3ZjhLR0Q5SkZjMHVTaUxEdWNNcCszM0YrV2VsRzFmV1NMNDd3RngzWHMwaTRDaHpwbWtVTG1HZis5Wk5hSVdYCllSalM2Rm5zYUxkTGo3MmZaVUhVZU8rRXE4by9id2pJNVlxZUptSnBSMTgwOTlKcTJlYTVNajcrc0JGU1RoeVoKNHlaVTJFTHpvNnZpeVlsYU85RUNLelcxRFQvayt2VzBRejJ3amtBNDVQWmltWCtKVEJRUFV5RFhnSXo3bmF5dgpBUU5ycjFEcmlSN0J6dWxuNWxqaXd2UlFibDM5VnVrcnpaeTloMHoxbzRiZW51blArM0cwU2tpaWNGa2Q4UUR6CjZLQVkrMXkyQWJtVSt0RlpiZGpuUzkzQWI0R2V2LzJZTzlOOEUwTCtZTU16b0NCa2pxbVMwTC81RTZxZTlPaVkKQmFJMWM5c2hBb0dCQU1TUlJPeGVjb3AxM21KMCtMNHRkV2JtY1FLMlZGaWR1dUZTTldQNTFVZFhMNmIzV1haZApxSUNyTlB6T0U2czVyTXkwQ01PS0xraGJUNWErbFRrMHU3TnRscFM1NHRYREp0VG9ERWdRSVNBcm5neHpTeUZWCnduZHFnU3kyN1RUcGVUUHFmOG1NQ2J2a0hJZ29ZRHU1dFhERWlqRW00VC9kYXZvVklrbFRPM1NIQW9HQkFOSGYKdDZqcjB6aWg4VGdqeFU3dGZQdjJ4bUhjVHZBbW5ieUF4OGJSbXl0a0xXUGxOQlZ1R1lQdGZrdnE5UG9JNWZDVQpRV3dkUkNmWDY4b1owMVRmSUNvekhrZzd4Q1lXM0FKc1pHMnk0bURSWlZnMEczTUVCcEplRG9YaU9hRU8vbWVrCnlPS0xEWEJ4OS9jZ1RDV20yU2tiMzcxQ2NEeTYwbHJ1RUVLcjJRR0hBb0dCQUpRUDdIK3pBTW9rMExjTzd0S3AKZ1RaYVBDUFQzU0xHNUo2V2d0cmtzKzlCMEFZUGFOYk00NERQOVdDN2hYdERQVk1RQlUzdEJzRy83ZXBaY2lPZQpBZ2k4Y21GaXgyZEcwVGdyOWh4TjhmVytoUlZSdnZURUdYQkR6RHMzS3VQaFBVZUt5bWl4VUIrMFNuMlJGRFBJCnhjL0VhMmRzcHR5cFZzdzdJUkZrWFhOL0FvR0FRU2lmQWIvdHZRaHlOc2JNVEZ2cFVPVGw1SjRjbCt5MVRrQUIKUmxYdlFnS0JJU0daRVFvMHU4UHhVU3FxVWpLUENTbE9RbjIzbWxNc0xudmtJOVorU3Z2QjdCVTZLY1V4RzBPQgp6cGthTllydFZ2d2VoWS83WmxmelZGZlBJcFRnSVZlRTB1anZERGttRGtDbHc0N1Fuelc3T2l3MVluVnlONjd2CnQzTlpGV01DZ1lFQXRCOVYvNDZNNUFtUHE4d0p2Q2VPaytWZy9qY1Rwb2pYaWlrajRiNXpnSTJRSXlIZU1TM2UKZzBOQnhjT3RMbDJlZWhMZjBiL1BjckJuT1FsRlJXNUV5MEJSSlJtRVRKREhQcUNXWDd5MVBQTW1MMkV4bmo4egpvd3BRa1dMMm5yS1krOHZZemVMMkltbk02MEVzc3Npb0QwSjFkb09UVitpdHhmb3NPV3MvSlpvPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=

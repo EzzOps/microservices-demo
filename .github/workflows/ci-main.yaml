@@ -1,6 +1,4 @@
 on: [push]
-env:
-  DEV_CLUSTER_KUBECONF: ${{ secrets.DEV_CLUSTER_KUBECONF }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -12,8 +10,6 @@ jobs:
           version: 'latest'
       - name: Deploy Kubernetes Manifests
         timeout-minutes: 10
-        run: |
-          mkdir -p kubeconf
-          echo "$DEV_CLUSTER_KUBECONF" > kubeconf/kubeconf.conf        
-          export KUBECONFIG=kubeconf/kubeconf.conf 
+        run: |     
+          export KUBECONFIG=skaffold.yaml
           kubectl apply --validate=false --server-side=false -f kubernetes-manifests/
