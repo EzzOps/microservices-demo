@@ -1,5 +1,37 @@
 on: [push]
 jobs:
+  code-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-dotnet@v4
+      env:
+        DOTNET_INSTALL_DIR: "./.dotnet"
+      with:
+        dotnet-version: '8.0'
+    - uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+    - name: Go Unit Tests
+      timeout-minutes: 10
+      run: |
+        for SERVICE in "shippingservice" "productcatalogservice"; do
+          echo "testing $SERVICE..."
+          pushd src/$SERVICE
+          go test
+          popd
+        done
+    - name: C# Unit Tests
+      timeout-minutes: 10
+      run: |
+        dotnet test src/cartservice/
+  deployment-tests:
+    runs-on: ubuntu-latest
+    needs: code-tests
+    strategy:
+      matrix:
+        profile: ["local-code"]
+      fail-fast: true  
   deploy:
     runs-on: ubuntu-latest
     steps:
