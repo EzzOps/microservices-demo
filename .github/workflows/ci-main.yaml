@@ -12,5 +12,6 @@ jobs:
         timeout-minutes: 10
         run: |     
           export KUBECONFIG=skaffold.yaml
-          kubectl remove --validate=false --server-side=false -f kubernetes-manifests/
+          kubectl delete --validate=false --server-side=false -f kubernetes-manifests/
           kubectl apply --validate=false --server-side=false -f release/kubernetes-manifests/
+          
